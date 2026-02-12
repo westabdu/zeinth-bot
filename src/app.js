@@ -1,7 +1,11 @@
-import { Client, Collection, REST, Routes, GatewayIntentBits, Partials } from "discord.js";
+import { Client, Collection, REST, Routes, GatewayIntentBits, Partials, EmbedBuilder } from "discord.js";
 import { readdirSync } from "fs";
 import 'dotenv/config';
-const path = require('path'); // en üste ekle
+import path from 'path';
+import http from 'http';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const client = new Client({
     intents: [
@@ -32,62 +36,82 @@ client.commands = new Collection();
 const commandsData = [];
 
 const loadCommands = async () => {
-  const categories = readdirSync(path.join(process.cwd(), 'src', 'commands'));
-  
-  for (const category of categories) {
-    const categoryPath = path.join(process.cwd(), 'src', 'commands', category);
-    const files = readdirSync(categoryPath).filter(file => file.endsWith(".js"));
-    
-    for (const file of files) {
-      try {
-        const filePath = path.join(process.cwd(), 'src', 'commands', category, file);
-        const command = await import(`file://${filePath}`);
+    try {
+        const commandsPath = path.join(__dirname, 'commands');
+        const categories = readdirSync(commandsPath, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
         
-        if (command.data && command.data.name) {
-          client.commands.set(command.data.name, command);
-          if (command.slash_data) commandsData.push(command.slash_data.toJSON());
-          console.log(`✅ Komut yüklendi: ${command.data.name}`);
+        for (const category of categories) {
+            const categoryPath = path.join(commandsPath, category);
+            const files = readdirSync(categoryPath).filter(file => file.endsWith(".js"));
+            
+            for (const file of files) {
+                try {
+                    const filePath = path.join(categoryPath, file);
+                    const command = await import(`file://${filePath}`);
+                    
+                    if (command.data && command.data.name) {
+                        client.commands.set(command.data.name, command);
+                        if (command.slash_data) commandsData.push(command.slash_data.toJSON());
+                        console.log(`✅ Komut yüklendi: ${command.data.name}`);
+                    }
+                } catch (error) {
+                    console.error(`❌ Komut yüklenirken hata: ${category}/${file}`, error.message);
+                }
+            }
         }
-      } catch (error) {
-        console.error(`❌ Komut yüklenirken hata: ${category}/${file}`, error.message);
-      }
+    } catch (error) {
+        console.error("❌ Komut klasörü bulunamadı:", error.message);
     }
-  }
 };
 
 // --- Event Yükleyici ---
 const loadEvents = async () => {
-  const eventsPath = path.join(process.cwd(), 'src', 'events');
-  const eventFiles = readdirSync(eventsPath).filter(file => file.endsWith(".js"));
-  
-  for (const file of eventFiles) {
     try {
-      const filePath = path.join(process.cwd(), 'src', 'events', file);
-      const event = await import(`file://${filePath}`).then(m => m.default);
-      if (typeof event === 'function') {
-        event(client);
-        console.log(`✅ Event yüklendi: ${file}`);
-      }
+        const eventsPath = path.join(__dirname, 'events');
+        const eventFiles = readdirSync(eventsPath).filter(file => file.endsWith(".js"));
+        
+        for (const file of eventFiles) {
+            try {
+                const filePath = path.join(eventsPath, file);
+                const event = await import(`file://${filePath}`).then(m => m.default);
+                if (typeof event === 'function') {
+                    event(client);
+                    console.log(`✅ Event yüklendi: ${file}`);
+                }
+            } catch (error) {
+                console.error(`❌ Event yüklenirken hata: ${file}`, error.message);
+            }
+        }
     } catch (error) {
-      console.error(`❌ Event yüklenirken hata: ${file}`, error.message);
+        console.error("❌ Event klasörü bulunamadı:", error.message);
     }
-  }
 };
 
 // --- Embed Yardımcısı ---
-try {
-    client.embed = await import("./utils/bot/embed.js").then(m => m.default);
-    console.log("✅ Embed yardımcısı yüklendi!");
-} catch (error) {
-    console.error("❌ Embed yardımcısı yüklenemedi:", error.message);
-    // Fallback embed
-    client.embed = async(desc, tip = "ana") => {
+client.embed = (desc, tip = "ana") => {
+    try {
         const renkler = { ana: 0x5865F2, yesil: 0x00FF00, kirmizi: 0xFF0000, sari: 0xFFD700 };
-        return new (await import("discord.js")).EmbedBuilder()
+        return new EmbedBuilder()
             .setColor(renkler[tip] || 0x5865F2)
             .setDescription(desc);
-    };
-}
+    } catch (error) {
+        console.error("❌ Embed oluşturma hatası:", error);
+        return { color: 0x5865F2, description: desc };
+    }
+};
+
+// --- Health Check Sunucusu ---
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Zeinth Moderation Bot is running!\n');
+});
+
+const PORT = process.env.PORT || 8000;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Health check sunucusu çalışıyor: ${PORT}`);
+});
 
 // --- Ready Event ---
 client.once("ready", async () => {
@@ -120,20 +144,8 @@ process.on('uncaughtException', error => {
 
 // --- Botu Başlat ---
 if (!process.env.DISCORD_TOKEN) {
-    console.error("❌ .env dosyasında token bulunamadı!");
+    console.error("❌ DISCORD_TOKEN environment variable bulunamadı!");
     process.exit(1);
 }
-
-import http from 'http';
-
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Zeinth Moderation Bot is running!\n');
-});
-
-const PORT = process.env.PORT || 8000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Health check sunucusu çalışıyor: ${PORT}`);
-});
 
 client.login(process.env.DISCORD_TOKEN);
