@@ -124,4 +124,16 @@ if (!process.env.DISCORD_TOKEN) {
     process.exit(1);
 }
 
+import http from 'http';
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Zeinth Moderation Bot is running!\n');
+});
+
+const PORT = process.env.PORT || 8000;
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Health check sunucusu çalışıyor: ${PORT}`);
+});
+
 client.login(process.env.DISCORD_TOKEN);
