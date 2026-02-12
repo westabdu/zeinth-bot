@@ -1,6 +1,7 @@
 import { Client, Collection, REST, Routes, GatewayIntentBits, Partials } from "discord.js";
 import { readdirSync } from "fs";
 import 'dotenv/config';
+const path = require('path'); // en üste ekle
 
 const client = new Client({
     intents: [
@@ -31,40 +32,46 @@ client.commands = new Collection();
 const commandsData = [];
 
 const loadCommands = async () => {
-    const categories = readdirSync("./commands");
-    for (const category of categories) {
-        const files = readdirSync(`./commands/${category}`).filter(file => file.endsWith(".js"));
-        for (const file of files) {
-            try {
-                const command = await import(`./commands/${category}/${file}`);
-                if (command.data && command.data.name) {
-                    client.commands.set(command.data.name, command);
-                    if (command.slash_data) commandsData.push(command.slash_data.toJSON());
-                    console.log(`✅ Komut yüklendi: ${command.data.name}`);
-                }
-            } catch (error) {
-                console.error(`❌ Komut yüklenirken hata: ${category}/${file}`, error.message);
-            }
+  const categories = readdirSync(path.join(process.cwd(), 'src', 'commands'));
+  
+  for (const category of categories) {
+    const categoryPath = path.join(process.cwd(), 'src', 'commands', category);
+    const files = readdirSync(categoryPath).filter(file => file.endsWith(".js"));
+    
+    for (const file of files) {
+      try {
+        const filePath = path.join(process.cwd(), 'src', 'commands', category, file);
+        const command = await import(`file://${filePath}`);
+        
+        if (command.data && command.data.name) {
+          client.commands.set(command.data.name, command);
+          if (command.slash_data) commandsData.push(command.slash_data.toJSON());
+          console.log(`✅ Komut yüklendi: ${command.data.name}`);
         }
+      } catch (error) {
+        console.error(`❌ Komut yüklenirken hata: ${category}/${file}`, error.message);
+      }
     }
+  }
 };
 
 // --- Event Yükleyici ---
 const loadEvents = async () => {
-    const eventFiles = readdirSync("./events").filter(file => file.endsWith(".js"));
-    for (const file of eventFiles) {
-        try {
-            const event = await import(`./events/${file}`).then(m => m.default);
-            if (typeof event === 'function') {
-                event(client);
-                console.log(`✅ Event yüklendi: ${file}`);
-            } else {
-                console.error(`❌ Event bir fonksiyon değil: ${file}`);
-            }
-        } catch (error) {
-            console.error(`❌ Event yüklenirken hata: ${file}`, error.message);
-        }
+  const eventsPath = path.join(process.cwd(), 'src', 'events');
+  const eventFiles = readdirSync(eventsPath).filter(file => file.endsWith(".js"));
+  
+  for (const file of eventFiles) {
+    try {
+      const filePath = path.join(process.cwd(), 'src', 'events', file);
+      const event = await import(`file://${filePath}`).then(m => m.default);
+      if (typeof event === 'function') {
+        event(client);
+        console.log(`✅ Event yüklendi: ${file}`);
+      }
+    } catch (error) {
+      console.error(`❌ Event yüklenirken hata: ${file}`, error.message);
     }
+  }
 };
 
 // --- Embed Yardımcısı ---
