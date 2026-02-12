@@ -1,0 +1,39 @@
+{
+  "conv_728606270084481034": {
+    "messages": [
+      {
+        "text": "naber aga nasılsın",
+        "isUser": true,
+        "timestamp": 1770743044073
+      },
+      {
+        "text": "Her şey yolunda! Sohbet etmek güzel, değil mi?",
+        "isUser": false,
+        "timestamp": 1770743044074
+      },
+      {
+        "text": "film önerirmisin",
+        "isUser": true,
+        "timestamp": 1770743057530
+      },
+      {
+        "text": "Film konuşmayı seviyorum! En sevdiğin film nedir?",
+        "isUser": false,
+        "timestamp": 1770743057531
+      },
+      {
+        "text": "canım sıkkın",
+        "isUser": true,
+        "timestamp": 1770752389156
+      },
+      {
+        "text": "Üzülme aapo33, her şey düzelecek! Ben yanındayım 🤗",
+        "isUser": false,
+        "timestamp": 1770752389158
+      }
+    ],
+    "lastTopic": "film",
+    "emotion": "neutral",
+    "talkCount": 6
+  }
+}
