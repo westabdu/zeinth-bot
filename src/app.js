@@ -89,7 +89,7 @@ client.once("ready", async () => {
     await loadCommands();
     await loadEvents();
     
-    const rest = new REST({ version: '10' }).setToken(process.env.token);
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
 
     try {
         console.log("♻️ Slash komutlar yenileniyor...");
@@ -112,9 +112,9 @@ process.on('uncaughtException', error => {
 });
 
 // --- Botu Başlat ---
-if (!process.env.token) {
+if (!process.env.DISCORD_TOKEN) {
     console.error("❌ .env dosyasında token bulunamadı!");
     process.exit(1);
 }
 
-client.login(process.env.token);
+client.login(process.env.DISCORD_TOKEN);
