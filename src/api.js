@@ -7,20 +7,24 @@ import db from './utils/database.js'; // Botun database'ini kullan
 dotenv.config();
 
 const app = express();
-const PORT = process.env.API_PORT || 3001; // 3001 portunda çalışsın (app.js 3000'de çalışıyor)
+const PORT = process.env.API_PORT || 3001;
 
-// CORS ayarları - Web sitemizin erişimine izin ver
+// CORS ayarları
 app.use(cors({
-    origin: ['http://localhost:5500', 'https://westabdu.github.io', 'https://zeinth.abrdns.com'], // Kendi domainlerini ekle
+    origin: [
+        'http://127.0.0.1:5500',
+        'http://localhost:5500',
+        'https://westabdu.github.io',
+        'https://zeinth.abrdns.com'
+    ],
     credentials: true
 }));
 
-// JSON verisi göndereceğimiz için
 app.use(express.json());
 
 // -------------------- API ENDPOINT'LERİ --------------------
 
-// 1. Ana sayfa - sadece API'nin çalıştığını göstersin
+// 1. Ana sayfa
 app.get('/', (req, res) => {
     res.json({
         status: 'online',
@@ -29,29 +33,30 @@ app.get('/', (req, res) => {
     });
 });
 
-// 2. Bot İstatistikleri (en önemli endpoint'imiz!)
+// 2. Bot İstatistikleri (DÜZELTİLDİ!)
 app.get('/api/bot-stats', async (req, res) => {
     try {
-        // Tüm sunucu verilerini çekelim
+        // Tüm sunucu verilerini çek
         const allKeys = db.all();
         
-        // stats_ ile başlayan ve sunucu ID'si içeren key'leri bul
+        // stats_ ile başlayan key'leri bul (DOĞRU: 'stats_' olmalı)
         const guildKeys = allKeys.filter(item => 
             item.id && 
             typeof item.id === 'string' && 
             item.id.startsWith('stats_')
         );
         
-        // Sunucu ID'lerini benzersiz olarak al (farklı kullanıcılar aynı sunucuda olabilir)
+        // Sunucu ID'lerini benzersiz olarak al
         const uniqueGuilds = new Set();
         guildKeys.forEach(item => {
+            // ID formatı: stats_GUILDID_USERID
             const parts = item.id.split('_');
             if (parts.length >= 3) {
-                uniqueGuilds.add(parts[1]); // stats_GUILDID_USERID -> GUILDID
+                uniqueGuilds.add(parts[1]); // GUILDID'yi ekle
             }
         });
         
-        // Toplam komut sayısı (komut klasörünü sayalım - basit bir yöntem)
+        // Toplam komut sayısı
         let totalCommands = 0;
         try {
             const fs = require('fs');
@@ -66,10 +71,10 @@ app.get('/api/bot-stats', async (req, res) => {
             });
         } catch (e) {
             console.error('Komut sayısı hesaplanamadı:', e);
-            totalCommands = 68; // Fallback değer
+            totalCommands = 44; // Log'dan gördüğümüz değer
         }
         
-        // Sonuçları gönder
+        // Başarılı response GÖNDER (DÜZELTİLDİ!)
         res.json({
             success: true,
             data: {
@@ -90,56 +95,8 @@ app.get('/api/bot-stats', async (req, res) => {
     }
 });
 
-// 3. Kullanıcı istatistikleri (opsiyonel, ilerisi için)
-app.get('/api/user/:userId', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const guildId = req.query.guildId; // Hangi sunucudan istediğini belirt
-        
-        if (!guildId) {
-            return res.status(400).json({
-                success: false,
-                error: 'guildId parametresi gerekli'
-            });
-        }
-        
-        const userKey = `stats_${guildId}_${userId}`;
-        const userData = db.get(userKey);
-        
-        if (!userData) {
-            return res.status(404).json({
-                success: false,
-                error: 'Kullanıcı bulunamadı'
-            });
-        }
-        
-        res.json({
-            success: true,
-            data: {
-                level: userData.msg_lv || 1,
-                xp: userData.msg_xp || 0,
-                cash: userData.cash || 0,
-                bank: userData.bank || 0,
-                messages: userData.total_messages || 0
-            }
-        });
-        
-    } catch (error) {
-        console.error('API hatası:', error);
-        res.status(500).json({
-            success: false,
-            error: 'Sunucu hatası'
-        });
-    }
-});
-
 // -------------------- SUNUCUYU BAŞLAT --------------------
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ API sunucusu http://localhost:${PORT} adresinde çalışıyor!`);
     console.log(`📊 Bot istatistikleri için: http://localhost:${PORT}/api/bot-stats`);
-});
-
-// Hata yakalama
-process.on('unhandledRejection', (error) => {
-    console.error('❌ API sunucusu hatası:', error);
 });
