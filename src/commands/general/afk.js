@@ -9,7 +9,8 @@ export const data = {
             const sebep = interaction.options.getString('sebep') || "Şu an uzaktayım.";
             const user = interaction.user;
 
-            db.set(`afk_${interaction.guild.id}_${user.id}`, {
+            // 🔁 await eklendi
+            await db.set(`afk_${interaction.guild.id}_${user.id}`, {
                 sebep: sebep,
                 zaman: Date.now()
             });

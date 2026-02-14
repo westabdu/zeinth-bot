@@ -1,12 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import db from "../../utils/database.js";
 
-const STOCKS = {
-    zenith: { name: "Zenith Teknoloji", basePrice: 150, volatility: 0.1, emoji: "🏢" },
-    cryptocoin: { name: "CryptoCoin", basePrice: 4500, volatility: 0.3, emoji: "₿" },
-    gold: { name: "Altın", basePrice: 300, volatility: 0.05, emoji: "🪙" },
-    oil: { name: "Petrol", basePrice: 200, volatility: 0.15, emoji: "🛢️" }
-};
+const STOCKS = { zenith: { name: "Zenith Teknoloji", basePrice: 150, volatility: 0.1, emoji: "🏢" }, cryptocoin: { name: "CryptoCoin", basePrice: 4500, volatility: 0.3, emoji: "₿" }, gold: { name: "Altın", basePrice: 300, volatility: 0.05, emoji: "🪙" }, oil: { name: "Petrol", basePrice: 200, volatility: 0.15, emoji: "🛢️" } };
 
 let currentPrices = {};
 function updatePrices() {
@@ -28,7 +23,9 @@ export const data = {
             const guildId = interaction.guild.id;
             const userId = interaction.user.id;
             const userKey = `stats_${guildId}_${userId}`;
-            let userData = db.get(userKey) || { cash: 0, stocks: {} };
+            
+            let userData = await db.get(userKey);
+            if (!userData) userData = { cash: 0, stocks: {} };
 
             if (sub === "piyasa") {
                 updatePrices();
@@ -55,7 +52,29 @@ export const data = {
                 userData.total_spent = (userData.total_spent || 0) + toplamMaliyet;
                 if (!userData.stocks) userData.stocks = {};
                 userData.stocks[id] = (userData.stocks[id] || 0) + miktar;
-                db.set(userKey, userData);
+                
+                // ✨ QUEST İLERLEMESİ: Hisse alma
+                if (userData.quests?.daily) {
+                    const today = new Date().toDateString();
+                    const quests = userData.quests.daily[today] || [];
+                    let updated = false;
+                    
+                    for (const quest of quests) {
+                        if ((quest.id === 'stock_buy' || quest.id === 'spend_money') && !quest.completed) {
+                            if (quest.id === 'stock_buy') {
+                                quest.progress = (quest.progress || 0) + 1;
+                            } else if (quest.id === 'spend_money') {
+                                quest.progress = Math.min(quest.target, (quest.progress || 0) + toplamMaliyet);
+                            }
+                            if (quest.progress >= quest.target) quest.completed = true;
+                            updated = true;
+                        }
+                    }
+                    
+                    if (updated) await db.set(userKey, userData);
+                }
+                
+                await db.set(userKey, userData);
                 return interaction.reply({ content: `✅ **${miktar} adet ${stock.name}** aldın! Maliyet: **${toplamMaliyet.toLocaleString()} ZenCoin**`, ephemeral: true });
             }
 
@@ -73,7 +92,25 @@ export const data = {
                 userData.stocks[id] -= miktar;
                 userData.cash += toplamGelir;
                 userData.total_earned += toplamGelir;
-                db.set(userKey, userData);
+                
+                // ✨ QUEST İLERLEMESİ: Hisse satma
+                if (userData.quests?.daily) {
+                    const today = new Date().toDateString();
+                    const quests = userData.quests.daily[today] || [];
+                    let updated = false;
+                    
+                    for (const quest of quests) {
+                        if (quest.id === 'stock_sell' && !quest.completed) {
+                            quest.progress = (quest.progress || 0) + 1;
+                            if (quest.progress >= quest.target) quest.completed = true;
+                            updated = true;
+                        }
+                    }
+                    
+                    if (updated) await db.set(userKey, userData);
+                }
+                
+                await db.set(userKey, userData);
                 return interaction.reply({ content: `✅ **${miktar} adet ${stock.name}** sattın! Gelir: **${toplamGelir.toLocaleString()} ZenCoin**`, ephemeral: true });
             }
 

@@ -13,7 +13,8 @@ export const data = {
             const page = interaction.options.getInteger('sayfa') || 1;
             const itemsPerPage = 10;
             
-            const allKeys = db.all();
+            // 🔁 await eklendi
+            const allKeys = await db.all();
             const guildKeys = allKeys.filter(item => 
                 item && item.id && 
                 typeof item.id === 'string' &&

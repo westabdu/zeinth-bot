@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "",
-  "main": "app.js", 
+  "main": "app.js",
   "scripts": {
     "start": "node ."
   },
@@ -11,12 +11,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-        "discord.js": "^14.14.1",
-    "easy-json-database": "^1.5.1",
-    "dotenv": "^16.3.1",
-    "mongodb": "^6.0.0",
+    "@google/generative-ai": "^0.24.1",
     "canvas": "^3.2.1",
     "discord-api-types": "^0.38.38",
-    "@google/generative-ai": "^0.24.1"
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.6.1",
+    "easy-json-database": "^1.5.1",
+    "mongodb": "^6.0.0",
+    "mongoose": "^9.2.1"
   }
 }

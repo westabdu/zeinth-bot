@@ -1,12 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import db from "../../utils/database.js";
 
-const PETS = {
-    kedi: { name: "🐱 Kedi", price: 5000, happiness: 50, income: 10 },
-    kopek: { name: "🐶 Köpek", price: 8000, happiness: 60, income: 15 },
-    tavsan: { name: "🐰 Tavşan", price: 3000, happiness: 40, income: 5 },
-    tilki: { name: "🦊 Tilki", price: 15000, happiness: 80, income: 30 }
-};
+const PETS = { kedi: { name: "🐱 Kedi", price: 5000, happiness: 50, income: 10 }, kopek: { name: "🐶 Köpek", price: 8000, happiness: 60, income: 15 }, tavsan: { name: "🐰 Tavşan", price: 3000, happiness: 40, income: 5 }, tilki: { name: "🦊 Tilki", price: 15000, happiness: 80, income: 30 } };
 
 export const data = {
     name: "pet",
@@ -17,7 +12,7 @@ export const data = {
             const guildId = interaction.guild.id;
             const userId = interaction.user.id;
             const userKey = `stats_${guildId}_${userId}`;
-            let userData = db.get(userKey) || { cash: 0, pet: null, petHappiness: 50, petLastFed: Date.now(), petLastCollect: 0 };
+            let userData = await db.get(userKey) || { cash: 0, pet: null, petHappiness: 50, petLastFed: Date.now(), petLastCollect: 0 };
 
             if (sub === "liste") {
                 const embed = new EmbedBuilder().setTitle("🦊 Sahiplenebileceğin Evcil Hayvanlar").setColor(0xE67E22).setTimestamp();
@@ -42,7 +37,25 @@ export const data = {
                 userData.petHappiness = pet.happiness;
                 userData.petLastFed = Date.now();
                 userData.petLastCollect = Date.now();
-                db.set(userKey, userData);
+                
+                // ✨ QUEST İLERLEMESİ: Evcil hayvan sahiplenme
+                if (userData.quests?.daily) {
+                    const today = new Date().toDateString();
+                    const quests = userData.quests.daily[today] || [];
+                    let updated = false;
+                    
+                    for (const quest of quests) {
+                        if (quest.id === 'pet_owner' && !quest.completed) {
+                            quest.progress = (quest.progress || 0) + 1;
+                            if (quest.progress >= quest.target) quest.completed = true;
+                            updated = true;
+                        }
+                    }
+                    
+                    if (updated) await db.set(userKey, userData);
+                }
+                
+                await db.set(userKey, userData);
                 return interaction.reply({ content: `🎉 **${pet.name}** sahiplendin! Onu sev, besle, mutlu et!` });
             }
 
@@ -56,7 +69,25 @@ export const data = {
                 userData.total_spent = (userData.total_spent || 0) + beslemeMaliyeti;
                 userData.petHappiness = Math.min(100, (userData.petHappiness || 50) + 20);
                 userData.petLastFed = Date.now();
-                db.set(userKey, userData);
+                
+                // ✨ QUEST İLERLEMESİ: Evcil hayvan besleme
+                if (userData.quests?.daily) {
+                    const today = new Date().toDateString();
+                    const quests = userData.quests.daily[today] || [];
+                    let updated = false;
+                    
+                    for (const quest of quests) {
+                        if ((quest.id === 'pet_feed' || quest.id === 'pet_owner') && !quest.completed) {
+                            quest.progress = (quest.progress || 0) + 1;
+                            if (quest.progress >= quest.target) quest.completed = true;
+                            updated = true;
+                        }
+                    }
+                    
+                    if (updated) await db.set(userKey, userData);
+                }
+                
+                await db.set(userKey, userData);
                 return interaction.reply({ content: `🍖 **${pet.name}** beslendi! Mutluluk: %${userData.petHappiness}` });
             }
 
@@ -85,7 +116,7 @@ export const data = {
                 userData.cash = (userData.cash || 0) + kazanc;
                 userData.total_earned = (userData.total_earned || 0) + kazanc;
                 userData.petLastCollect = now;
-                db.set(userKey, userData);
+                await db.set(userKey, userData);
                 return interaction.reply({ content: `💰 **${kazanc.toLocaleString()} ZenCoin** kazandın! ${pet.name} seni mutlu etti.` });
             }
         } catch (error) {

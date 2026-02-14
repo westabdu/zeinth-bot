@@ -21,7 +21,9 @@ export const data = {
             const guildId = interaction.guild.id;
             const userId = interaction.user.id;
             const userKey = `stats_${guildId}_${userId}`;
-            let userData = db.get(userKey) || { cash: 0, msg_lv: 1, job: null, job_xp: 0, job_level: 1 };
+            
+            let userData = await db.get(userKey);
+            if (!userData) userData = { cash: 0, msg_lv: 1, job: null, job_xp: 0, job_level: 1 };
 
             if (sub === "liste") {
                 const embed = new EmbedBuilder().setColor(0x3498DB).setTitle("💼 Mevcut İşler").setTimestamp();
@@ -43,7 +45,7 @@ export const data = {
                 userData.job = jobId;
                 userData.job_xp = 0;
                 userData.job_level = 1;
-                db.set(userKey, userData);
+                await db.set(userKey, userData);
                 return interaction.reply({ content: `✅ **${job.name}** olarak işe başladın! Çalışmak için: \`/iş çalış\`` });
             }
 
@@ -73,7 +75,7 @@ export const data = {
                     levelUp = true;
                 }
 
-                db.set(userKey, userData);
+                await db.set(userKey, userData);
 
                 const embed = new EmbedBuilder().setColor(0x2ECC71).setTitle("💼 Çalıştın!").setDescription(`${interaction.user} **${job.name}** olarak çalıştı.`)
                     .addFields({ name: "💰 Kazanç", value: `${earned.toLocaleString()} ZenCoin`, inline: true },
@@ -97,7 +99,7 @@ export const data = {
             if (sub === "istifa") {
                 if (!userData.job) return interaction.reply({ content: "❌ Zaten bir işin yok!", ephemeral: true });
                 userData.job = null; userData.job_xp = 0; userData.job_level = 1;
-                db.set(userKey, userData);
+                await db.set(userKey, userData);
                 return interaction.reply({ content: "✅ İşinden istifa ettin. Yeni bir iş arayabilirsin!" });
             }
         } catch (error) {

@@ -18,16 +18,16 @@ export const data = {
             const gonderenKey = `stats_${guildId}_${gonderenId}`;
             const hedefKey = `stats_${guildId}_${hedef.id}`;
 
-            let gonderenData = db.get(gonderenKey);
-            let hedefData = db.get(hedefKey);
+            let gonderenData = await db.get(gonderenKey);
+            let hedefData = await db.get(hedefKey);
 
             if (!gonderenData) {
                 gonderenData = { cash: 0, bank: 0, total_transfers: 0, quests: { daily: {} } };
-                db.set(gonderenKey, gonderenData);
+                await db.set(gonderenKey, gonderenData);
             }
             if (!hedefData) {
                 hedefData = { cash: 0, bank: 0 };
-                db.set(hedefKey, hedefData);
+                await db.set(hedefKey, hedefData);
             }
 
             if ((gonderenData.cash || 0) < miktar) {
@@ -63,8 +63,8 @@ export const data = {
                 });
             }
 
-            db.set(gonderenKey, gonderenData);
-            db.set(hedefKey, hedefData);
+            await db.set(gonderenKey, gonderenData);
+            await db.set(hedefKey, hedefData);
 
             const embed = new EmbedBuilder()
                 .setColor(0x5865F2)

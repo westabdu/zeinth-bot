@@ -9,7 +9,10 @@ export const data = {
             const hedef = interaction.options.getUser('kullanıcı') || interaction.user;
             const guildId = interaction.guild.id;
             const userKey = `stats_${guildId}_${hedef.id}`;
-            let userData = db.get(userKey) || { cash: 0, bank: 0 };
+            
+            // 🔁 Asenkron get
+            let userData = await db.get(userKey);
+            if (!userData) userData = { cash: 0, bank: 0 };
 
             const embed = new EmbedBuilder()
                 .setColor(0xFFA500)

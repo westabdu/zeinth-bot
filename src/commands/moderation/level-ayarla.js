@@ -9,6 +9,8 @@ export const data = {
         try {
             const kanal = interaction.options.getChannel('kanal');
             let mesaj = interaction.options.getString('mesaj');
+            
+            // ✅ guildId TANIMLANDI!
             const guildId = interaction.guild.id;
 
             if (!kanal.isTextBased()) {
@@ -18,7 +20,6 @@ export const data = {
                 });
             }
 
-            // "özel" seçeneği gelirse varsayılan mesaj ata
             if (mesaj === "özel") {
                 mesaj = "🎉 {user} Level {level}'a ulaştı!";
             }
@@ -30,7 +31,8 @@ export const data = {
                 });
             }
 
-            db.set(`level_ayar_${guildId}`, {
+            // ✅ await EKLENDİ!
+            await db.set(`level_ayar_${guildId}`, {
                 kanalId: kanal.id,
                 mesaj: mesaj,
                 ayarlayan: interaction.user.id,

@@ -4,6 +4,7 @@ import 'dotenv/config';
 import path from 'path';
 import http from 'http';
 import { fileURLToPath } from 'url';
+import connectDB from './database/mongoose.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -141,6 +142,8 @@ process.on('unhandledRejection', error => {
 process.on('uncaughtException', error => {
     console.error('❌ Yakalanmamış istisna:', error);
 });
+
+connectDB();
 
 // --- Botu Başlat ---
 if (!process.env.DISCORD_TOKEN) {

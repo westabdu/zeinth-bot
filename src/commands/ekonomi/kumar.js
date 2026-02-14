@@ -45,7 +45,7 @@ export const data = {
       }
       
       const userKey = `stats_${guildId}_${userId}`;
-      let userData = db.get(userKey);
+      let userData = await db.get(userKey);
       
       if (!userData) {
         return interaction.reply({ content: "❌ Önce biraz para kazanmalısın!", ephemeral: true });
@@ -112,7 +112,7 @@ export const data = {
           .setTimestamp();
       }
       
-      db.set(userKey, userData);
+      await db.set(userKey, userData);
       await interaction.reply({ embeds: [resultEmbed] });
     } catch (error) {
       console.error("❌ Kumar komutu hatası:", error);

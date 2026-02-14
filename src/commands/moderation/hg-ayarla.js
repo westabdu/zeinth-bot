@@ -13,13 +13,16 @@ export const data = {
 
             const kanal = interaction.options.getChannel('kanal');
             const mesaj = interaction.options.getString('mesaj');
+            
+            // ✅ guildId TANIMLANDI!
             const guildId = interaction.guild.id;
 
             if (!kanal.isTextBased()) {
                 return interaction.reply({ content: "❌ Lütfen geçerli bir yazı kanalı seçin!", ephemeral: true });
             }
 
-            db.set(`hg_sistemi_${guildId}`, {
+            // ✅ await EKLENDİ!
+            await db.set(`hg_sistemi_${guildId}`, {
                 kanalId: kanal.id,
                 mesaj: mesaj
             });

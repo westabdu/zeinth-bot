@@ -9,7 +9,7 @@ export const data = {
             const hedef = interaction.options.getUser("kullanıcı") || interaction.user;
             const guildId = interaction.guild.id;
             const userKey = `stats_${guildId}_${hedef.id}`;
-            let data = db.get(userKey) || {};
+            let data = await db.get(userKey) || {};
 
             const embed = new EmbedBuilder()
                 .setColor(0x5865F2)

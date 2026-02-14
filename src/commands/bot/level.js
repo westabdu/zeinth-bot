@@ -13,19 +13,23 @@ export const data = {
             const guildId = interaction.guild.id;
             const key = `stats_${guildId}_${targetUser.id}`;
             
-            let levelData = db.get(key);
+            // 🔁 await eklendi
+            let levelData = await db.get(key);
             if (!levelData) {
                 levelData = { 
                     msg_xp: 0, 
                     msg_lv: 1, 
                     voice_xp: 0, 
-                    voice_lv: 1 
+                    voice_lv: 1,
+                    total_messages: 0,
+                    total_voice: 0
                 };
-                db.set(key, levelData);
+                // 🔁 await eklendi
+                await db.set(key, levelData);
             }
             
-            // Sıralama hesapla
-            const allKeys = db.all();
+            // 🔁 await eklendi (db.all asenkron)
+            const allKeys = await db.all();
             const guildKeys = allKeys.filter(item => 
                 item && item.id && 
                 typeof item.id === 'string' &&
@@ -40,7 +44,7 @@ export const data = {
                 return totalXpB - totalXpA;
             });
             
-            const rank = sortedUsers.findIndex(item => item.id === key) + 1;
+            const rank = sortedUsers.findIndex(item => item.id === key) + 1
             
             // XP hesaplamaları
             const currentLevel = levelData.msg_lv;

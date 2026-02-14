@@ -11,7 +11,9 @@ export const data = {
       const guildId = interaction.guild.id;
       const userId = interaction.user.id;
       const userKey = `stats_${guildId}_${userId}`;
-      let userData = db.get(userKey);
+      
+      // 🔁 Asenkron get
+      let userData = await db.get(userKey);
       
       if (!userData) {
         return interaction.reply({ content: "❌ Önce biraz para kazanmalısın!", ephemeral: true });
@@ -27,7 +29,8 @@ export const data = {
         
         userData.cash -= miktar;
         userData.bank = (userData.bank || 0) + miktar;
-        db.set(userKey, userData);
+        // 🔁 Asenkron set
+        await db.set(userKey, userData);
         
         return interaction.reply({ 
           content: `🏦 **${miktar.toLocaleString()} ZenCoin** bankana yatırıldı! Bankada: **${userData.bank.toLocaleString()} ZenCoin**`, 
@@ -44,7 +47,7 @@ export const data = {
         
         userData.bank -= miktar;
         userData.cash += miktar;
-        db.set(userKey, userData);
+        await db.set(userKey, userData);
         
         return interaction.reply({ 
           content: `💵 **${miktar.toLocaleString()} ZenCoin** bankandan çekildi! Yeni bakiye: **${userData.cash.toLocaleString()} ZenCoin**`, 
@@ -76,7 +79,7 @@ export const data = {
         userData.bank += interest;
         userData.total_earned += interest;
         userData.last_interest = now;
-        db.set(userKey, userData);
+        await db.set(userKey, userData);
         
         return interaction.reply({ 
           content: `🏦 **${interest.toLocaleString()} ZenCoin** faiz kazandın! Bankanda: **${userData.bank.toLocaleString()} ZenCoin**`, 

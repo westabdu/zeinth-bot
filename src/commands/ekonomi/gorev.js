@@ -1,54 +1,22 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import db from "../../utils/database.js";
 
+// commands/gorev.js (sadece DAILY_QUESTS kısmını güncelle)
 const DAILY_QUESTS = [
-  {
-    id: "send_messages",
-    name: "💬 Mesaj Gönder",
-    description: "10 mesaj gönder",
-    target: 10,
-    reward: 100,
-    xp_reward: 50,
-    emoji: "💬"
-  },
-  {
-    id: "voice_time",
-    name: "🎤 Seste Kal",
-    description: "30 dakika seste kal",
-    target: 30,
-    reward: 150,
-    xp_reward: 75,
-    emoji: "🎤"
-  },
-  {
-    id: "gamble",
-    name: "🎰 Kumar Oyna",
-    description: "3 kumar oyunu oyna",
-    target: 3,
-    reward: 200,
-    xp_reward: 100,
-    emoji: "🎰"
-  },
-  {
-    id: "spend_money",
-    name: "💰 Para Harca",
-    description: "500 ZenCoin harca",
-    target: 500,
-    reward: 250,
-    xp_reward: 125,
-    emoji: "💰"
-  },
-  {
-    id: "transfer",
-    name: "💸 Transfer Yap",
-    description: "1 başarılı transfer yap",
-    target: 1,
-    reward: 300,
-    xp_reward: 150,
-    emoji: "💸"
-  }
+  // Mevcut görevler (güncellendi)
+  { id: "send_messages", name: "💬 Mesaj Gönder", description: "10 mesaj gönder", target: 10, reward: 100, xp_reward: 50, emoji: "💬" },
+  { id: "voice_time", name: "🎤 Seste Kal", description: "30 dakika seste kal", target: 30, reward: 150, xp_reward: 75, emoji: "🎤" },
+  { id: "gamble", name: "🎰 Kumar Oyna", description: "3 kumar oyunu oyna", target: 3, reward: 200, xp_reward: 100, emoji: "🎰" },
+  { id: "spend_money", name: "💰 Para Harca", description: "500 ZenCoin harca", target: 500, reward: 250, xp_reward: 125, emoji: "💰" },
+  { id: "transfer", name: "💸 Transfer Yap", description: "1 başarılı transfer yap", target: 1, reward: 300, xp_reward: 150, emoji: "💸" },
+  
+  // ✨ YENİ GÖREVLER
+  { id: "level_up", name: "📈 Seviye Atla", description: "1 seviye atla", target: 1, reward: 500, xp_reward: 200, emoji: "📈" },
+  { id: "daily_streak", name: "🔥 Günlük Seri", description: "Günlük ödülünü al (3 gün üst üste)", target: 3, reward: 400, xp_reward: 150, emoji: "🔥" },
+  { id: "stock_buy", name: "📊 Hisse Al", description: "1 hisse senedi al", target: 1, reward: 200, xp_reward: 75, emoji: "📊" },
+  { id: "pet_feed", name: "🦊 Evcil Hayvan Besle", description: "Evcil hayvanını 2 kere besle", target: 2, reward: 250, xp_reward: 100, emoji: "🦊" },
+  { id: "market_purchase", name: "🛒 Market Alışverişi", description: "Marketten 1 eşya al", target: 1, reward: 300, xp_reward: 125, emoji: "🛒" },
 ];
-
 export const data = {
   name: "gorev",
   description: "Günlük görevlerini görüntüle ve tamamla!",
@@ -58,7 +26,9 @@ export const data = {
       const guildId = interaction.guild.id;
       const userId = interaction.user.id;
       const userKey = `stats_${guildId}_${userId}`;
-      let userData = db.get(userKey);
+      
+      // 🔁 Asenkron get
+      let userData = await db.get(userKey);
       
       if (!userData) {
         userData = { 
@@ -71,7 +41,7 @@ export const data = {
           total_gambles: 0,
           total_transfers: 0
         };
-        db.set(userKey, userData);
+        await db.set(userKey, userData);
       }
       
       if (!userData.quests) userData.quests = { daily: {}, weekly: {} };
@@ -94,7 +64,7 @@ export const data = {
           };
         }
         
-        db.set(userKey, userData);
+        await db.set(userKey, userData);
       }
       
       const dailyQuests = Object.values(userData.quests.daily);
@@ -147,7 +117,6 @@ export const data = {
   }
 };
 
-// 📁 commands/ekonomi/gorev-odul.js
 export const data2 = {
   name: "gorev-odul",
   description: "Tamamladığın görevlerin ödülünü al!",
@@ -157,7 +126,8 @@ export const data2 = {
       const guildId = interaction.guild.id;
       const userId = interaction.user.id;
       const userKey = `stats_${guildId}_${userId}`;
-      let userData = db.get(userKey);
+      
+      let userData = await db.get(userKey);
       
       if (!userData || !userData.quests || !userData.quests.daily) {
         return interaction.reply({ content: "📭 Aktif görevin bulunmuyor!", ephemeral: true });
@@ -192,7 +162,7 @@ export const data2 = {
         levelUps++;
       }
       
-      db.set(userKey, userData);
+      await db.set(userKey, userData);
       
       const embed = new EmbedBuilder()
         .setColor(0x00FF00)

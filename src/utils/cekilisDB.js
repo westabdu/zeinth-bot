@@ -1,3 +1,3 @@
-import Database from "easy-json-database";
-const cekilisDB = new Database("./cekilis.json");
-export default cekilisDB;
+// src/utils/cekilisDB.js
+import db from './database.js'; // Aynı MongoDB instance'ını kullan
+export default db;

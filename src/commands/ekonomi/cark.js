@@ -20,7 +20,12 @@ export const data = {
             const userId = interaction.user.id;
             const guildId = interaction.guild.id;
             const userKey = `stats_${guildId}_${userId}`;
-            let userData = db.get(userKey) || { cash: 0, inventory: [], msg_xp: 0, msg_lv: 1 };
+            
+            // 🔁 Asenkron get
+            let userData = await db.get(userKey);
+            if (!userData) {
+                userData = { cash: 0, inventory: [], msg_xp: 0, msg_lv: 1 };
+            }
 
             const now = Date.now();
             const cooldown = 24 * 60 * 60 * 1000;
@@ -58,7 +63,7 @@ export const data = {
             }
 
             userData.last_spin = now;
-            db.set(userKey, userData);
+            await db.set(userKey, userData);
 
             const embed = new EmbedBuilder()
                 .setColor(0x9B59B6)

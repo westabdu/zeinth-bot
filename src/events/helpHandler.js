@@ -22,7 +22,13 @@ const commandDatabase = {
             { name: "/rol-panel sil", description: "Rol panelini siler", usage: "/rol-panel sil [mesaj_id]" },
             { name: "/rol-panel listele", description: "Aktif panelleri listeler", usage: "/rol-panel listele" },
             { name: "/rol-panel log-ayarla", description: "Rol log kanalını ayarlar", usage: "/rol-panel log-ayarla [kanal]" },
-            { name: "/rol-sıfırla", description: "Tüm rol panellerini sıfırlar", usage: "/rol-sıfırla" }
+            { name: "/rol-sıfırla", description: "Tüm rol panellerini sıfırlar", usage: "/rol-sıfırla" },
+            { name: "/automod", description: "Küfür engelleme CAPSLOCK engelleme Link engelleme ekler", usage: "/automod" },
+            { name: "/kayit-sistemi-ayarla", description: "Kayıtsız rolünü ve kayıtlı rollerini belirler", usage: "/kayit-sistemi-ayarla" },
+            { name: "/kayit-sistemi-kur", description: "Kayıt panelini kurar", usage: "/kayit-sistemi-kur" },
+            { name: "/kayit-sistemi-sıfırla", description: "Kayıt sistemini sıfırlar", usage: "/kayit-sistemi-sıfırla" },
+            
+            
         ]
     },
     
@@ -166,7 +172,7 @@ function getMainMenuEmbed(client) {
             { name: "🤖 Bot", value: `Bot yönetimi • ${botCount} komut`, inline: true }
         )
         .setThumbnail(client.user.displayAvatarURL())
-        .setFooter({ text: `Zeinth Moderation • /yardim | ${totalCommands} komut`, iconURL: client.user.displayAvatarURL() })
+        .setFooter({ text: `Zeinth Moderation • /yardim \`https://zeinth.abrdns.com/\` | ${totalCommands} komut`, iconURL: client.user.displayAvatarURL() })
         .setTimestamp();
 }
 

@@ -10,7 +10,8 @@ export const data = {
             const guildId = interaction.guild.id;
             const userId = interaction.user.id;
             const userKey = `stats_${guildId}_${userId}`;
-            let userData = db.get(userKey);
+            
+            let userData = await db.get(userKey);
             if (!userData?.inventory) return interaction.reply({ content: "📭 Envanterin boş!", ephemeral: true });
 
             const itemIndex = userData.inventory.findIndex(i => i.id === itemId && !i.used);
@@ -38,7 +39,7 @@ export const data = {
                 return interaction.reply({ content: "❌ Bu eşya kullanılamaz.", ephemeral: true });
             }
 
-            db.set(userKey, userData);
+            await db.set(userKey, userData);
             await interaction.reply({ content: `✅ **${item.name}** kullanıldı!\n${result}`, ephemeral: true });
         } catch (error) {
             console.error("❌ Kullan komutu hatası:", error);

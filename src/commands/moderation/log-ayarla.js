@@ -5,7 +5,7 @@ export const data = {
     name: "log-ayarla",
     description: "Log kanalını ayarlar.",
     
-    async execute(interaction) {
+    async execute(interaction) {  // ✅ interaction parametresi OLMALI!
         try {
             if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
                 return interaction.reply({ content: "❌ Bu komutu sadece yöneticiler kullanabilir!", ephemeral: true });
@@ -17,7 +17,11 @@ export const data = {
                 return interaction.reply({ content: "❌ Lütfen geçerli bir yazı kanalı seçin!", ephemeral: true });
             }
 
-            db.set(`logChannel_${interaction.guild.id}`, kanal.id);
+            // ✅ guildId tanımlandı!
+            const guildId = interaction.guild.id;
+            
+            // ✅ await eklendi!
+            await db.set(`logChannel_${guildId}`, kanal.id);
 
             await interaction.reply({ 
                 content: `✅ Log kanalı başarıyla ${kanal} olarak ayarlandı!`, 
