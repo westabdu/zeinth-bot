@@ -7,14 +7,13 @@ export const data = {
     
     async execute(interaction) {
         try {
-            await interaction.deferReply();
+            await interaction.deferReply().catch(() => {});
             
             const guildId = interaction.guild.id;
             const page = interaction.options.getInteger('sayfa') || 1;
             const itemsPerPage = 10;
             
-            // 🔁 await eklendi
-            const allKeys = await db.all();
+            const allKeys = await db.all().catch(() => []);
             const guildKeys = allKeys.filter(item => 
                 item && item.id && 
                 typeof item.id === 'string' &&
@@ -76,10 +75,19 @@ export const data = {
                     .setDisabled(page >= totalPages)
             );
             
-            await interaction.editReply({ embeds: [embed], components: [buttons] });
+            if (interaction.replied || interaction.deferred) {
+                await interaction.editReply({ embeds: [embed], components: [buttons] });
+            } else {
+                await interaction.reply({ embeds: [embed], components: [buttons] });
+            }
         } catch (error) {
             console.error("❌ Level-top komutu hatası:", error);
-            await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
+            
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene.", ephemeral: true }).catch(() => {});
+            } else {
+                await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." }).catch(() => {});
+            }
         }
     }
 };
