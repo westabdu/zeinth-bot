@@ -5,20 +5,18 @@ export default client => {
     client.on('guildMemberAdd', async member => {
         try {
             const guildId = member.guild.id;
-            const ayarlar = db.get(`hg_sistemi_${guildId}`);
+            const ayarlar = await db.get(`hg_sistemi_${guildId}`);
             if (!ayarlar?.kanalId) return;
 
             const kanal = member.guild.channels.cache.get(ayarlar.kanalId);
             if (!kanal?.isTextBased()) return;
 
-            // Mesaj değişkenlerini çevir
             const sonMesaj = ayarlar.mesaj
                 .replace(/{user}/g, `<@${member.id}>`)
                 .replace(/{sunucu}/g, member.guild.name)
                 .replace(/{sayı}/g, member.guild.memberCount);
 
-            // Otorol
-            const otorolId = db.get(`otorol_${member.guild.id}`);
+            const otorolId = await db.get(`otorol_${member.guild.id}`);
             if (otorolId) {
                 const rol = member.guild.roles.cache.get(otorolId);
                 if (rol && member.guild.members.me.roles.highest.comparePositionTo(rol) > 0) {
@@ -26,7 +24,6 @@ export default client => {
                 }
             }
 
-            // Embed oluştur (client.embed yoksa fallback)
             let embed;
             if (client.embed) {
                 embed = client.embed(sonMesaj, "ana")

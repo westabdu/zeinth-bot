@@ -4,20 +4,14 @@ import db from "../../utils/database.js";
 export const data = {
     name: "level-ayarla",
     description: "Seviye atlama bildirimlerini ayarlar.",
-    
     async execute(interaction) {
         try {
             const kanal = interaction.options.getChannel('kanal');
             let mesaj = interaction.options.getString('mesaj');
-            
-            // ✅ guildId TANIMLANDI!
             const guildId = interaction.guild.id;
 
             if (!kanal.isTextBased()) {
-                return interaction.reply({ 
-                    content: "❌ Sadece yazı kanallarını seçebilirsin!",
-                    ephemeral: true 
-                });
+                return interaction.reply({ content: "❌ Sadece yazı kanallarını seçebilirsin!", ephemeral: true });
             }
 
             if (mesaj === "özel") {
@@ -25,13 +19,9 @@ export const data = {
             }
 
             if (!mesaj.includes('{user}') || !mesaj.includes('{level}')) {
-                return interaction.reply({ 
-                    content: "❌ Mesaj en az `{user}` ve `{level}` etiketlerini içermeli!",
-                    ephemeral: true 
-                });
+                return interaction.reply({ content: "❌ Mesaj en az `{user}` ve `{level}` etiketlerini içermeli!", ephemeral: true });
             }
 
-            // ✅ await EKLENDİ!
             await db.set(`level_ayar_${guildId}`, {
                 kanalId: kanal.id,
                 mesaj: mesaj,
@@ -68,18 +58,11 @@ export const slash_data = new SlashCommandBuilder()
     .setName("level-ayarla")
     .setDescription("Level up mesajını ve kanalını ayarlar.")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    .addChannelOption(opt => 
-        opt.setName("kanal")
-            .setDescription("Level up mesajlarının gideceği kanal")
-            .setRequired(true)
-            .addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
-    .addStringOption(opt => 
-        opt.setName("mesaj")
-            .setDescription("Kullanılabilir: {user} {level} {guild} {type}")
-            .setRequired(true)
-            .addChoices(
-                { name: "Standart", value: "🎉 {user} Level {level}'a ulaştı!" },
-                { name: "Tebrik", value: "🏆 Tebrikler {user}! Level {level}'a yükseldin!" },
-                { name: "Güç", value: "⚡ {user} gücü arttı! Artık Level {level}!" },
-                { name: "Özel (elle yaz)", value: "özel" }
-            ));
+    .addChannelOption(opt => opt.setName("kanal").setDescription("Level up mesajlarının gideceği kanal").setRequired(true).addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
+    .addStringOption(opt => opt.setName("mesaj").setDescription("Kullanılabilir: {user} {level} {guild} {type}").setRequired(true)
+        .addChoices(
+            { name: "Standart", value: "🎉 {user} Level {level}'a ulaştı!" },
+            { name: "Tebrik", value: "🏆 Tebrikler {user}! Level {level}'a yükseldin!" },
+            { name: "Güç", value: "⚡ {user} gücü arttı! Artık Level {level}!" },
+            { name: "Özel (elle yaz)", value: "özel" }
+        ));

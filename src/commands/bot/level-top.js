@@ -7,7 +7,15 @@ export const data = {
     
     async execute(interaction) {
         try {
-            await interaction.deferReply().catch(() => {});
+            // Önce defer dene, olmazsa reply ile devam et
+            let deferred = false;
+            try {
+                await interaction.deferReply();
+                deferred = true;
+            } catch (e) {
+                // defer başarısız, reply kullanacağız
+                deferred = false;
+            }
             
             const guildId = interaction.guild.id;
             const page = interaction.options.getInteger('sayfa') || 1;
@@ -75,7 +83,8 @@ export const data = {
                     .setDisabled(page >= totalPages)
             );
             
-            if (interaction.replied || interaction.deferred) {
+            // deferred durumuna göre cevap ver
+            if (deferred) {
                 await interaction.editReply({ embeds: [embed], components: [buttons] });
             } else {
                 await interaction.reply({ embeds: [embed], components: [buttons] });
@@ -83,11 +92,13 @@ export const data = {
         } catch (error) {
             console.error("❌ Level-top komutu hatası:", error);
             
-            if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene.", ephemeral: true }).catch(() => {});
-            } else {
-                await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." }).catch(() => {});
-            }
+            try {
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
+                } else {
+                    await interaction.reply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene.", ephemeral: true });
+                }
+            } catch (e) {}
         }
     }
 };
