@@ -6,7 +6,7 @@ export default client => {
             if (!interaction.isButton()) return;
 
             if (interaction.customId === 'ticket_olustur') {
-                await interaction.deferReply({ ephemeral: true });
+                await interaction({ ephemeral: true });
 
                 const kanal = await interaction.guild.channels.create({
                     name: `destek-${interaction.user.username}`,

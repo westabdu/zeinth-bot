@@ -7,15 +7,6 @@ export const data = {
     
     async execute(interaction) {
         try {
-            // Önce defer dene, olmazsa reply ile devam et
-            let deferred = false;
-            try {
-                await interaction.deferReply();
-                deferred = true;
-            } catch (e) {
-                // defer başarısız, reply kullanacağız
-                deferred = false;
-            }
             
             const guildId = interaction.guild.id;
             const page = interaction.options.getInteger('sayfa') || 1;

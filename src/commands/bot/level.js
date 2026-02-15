@@ -7,7 +7,7 @@ export const data = {
     
     async execute(interaction) {
         try {
-            await interaction.deferReply();
+            await interaction();
             
             const targetUser = interaction.options.getUser("kullanıcı") || interaction.user;
             const guildId = interaction.guild.id;
