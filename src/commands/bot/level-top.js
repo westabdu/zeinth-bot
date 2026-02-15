@@ -7,7 +7,6 @@ export const data = {
     
     async execute(interaction) {
         try {
-            
             const guildId = interaction.guild.id;
             const page = interaction.options.getInteger('sayfa') || 1;
             const itemsPerPage = 10;
@@ -74,17 +73,12 @@ export const data = {
                     .setDisabled(page >= totalPages)
             );
             
-            // deferred durumuna göre cevap ver
-            if (deferred) {
-                await interaction.editReply({ embeds: [embed], components: [buttons] });
-            } else {
-                await interaction.reply({ embeds: [embed], components: [buttons] });
-            }
+            await interaction.editReply({ embeds: [embed], components: [buttons] });
+            
         } catch (error) {
             console.error("❌ Level-top komutu hatası:", error);
-            
             try {
-                if (interaction.replied || interaction.deferred) {
+                if (interaction.deferred) {
                     await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
                 } else {
                     await interaction.reply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene.", ephemeral: true });

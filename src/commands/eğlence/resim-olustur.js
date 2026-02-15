@@ -6,7 +6,7 @@ export const data = {
     
     async execute(interaction) {
         try {
-            await interaction();
+            await interaction.deferReply();
             
             const prompt = interaction.options.getString("prompt");
             

@@ -7,13 +7,10 @@ export const data = {
     
     async execute(interaction) {
         try {
-            await interaction();
-            
             const targetUser = interaction.options.getUser("kullanıcı") || interaction.user;
             const guildId = interaction.guild.id;
             const key = `stats_${guildId}_${targetUser.id}`;
             
-            // 🔁 await eklendi
             let levelData = await db.get(key);
             if (!levelData) {
                 levelData = { 
@@ -24,11 +21,9 @@ export const data = {
                     total_messages: 0,
                     total_voice: 0
                 };
-                // 🔁 await eklendi
                 await db.set(key, levelData);
             }
             
-            // 🔁 await eklendi (db.all asenkron)
             const allKeys = await db.all();
             const guildKeys = allKeys.filter(item => 
                 item && item.id && 
@@ -46,24 +41,21 @@ export const data = {
             
             const rank = sortedUsers.findIndex(item => item.id === key) + 1
             
-            // XP hesaplamaları
             const currentLevel = levelData.msg_lv;
             const currentXP = levelData.msg_xp;
             const xpNeeded = currentLevel * 500;
             const xpProgress = ((currentXP / xpNeeded) * 100).toFixed(1);
             
-            // Progress bar oluştur (görsel için)
             const progressBarLength = 15;
             const filledBars = Math.floor((currentXP / xpNeeded) * progressBarLength);
             const emptyBars = progressBarLength - filledBars;
             const progressBar = `██`.repeat(filledBars) + `░░`.repeat(emptyBars);
             
-            // Renk belirle (level'a göre)
-            let embedColor = 0x5865F2; // Discord mavisi
-            if (currentLevel >= 50) embedColor = 0xFFD700; // Altın
-            else if (currentLevel >= 30) embedColor = 0x9B59B6; // Mor
-            else if (currentLevel >= 20) embedColor = 0x3498DB; // Mavi
-            else if (currentLevel >= 10) embedColor = 0x2ECC71; // Yeşil
+            let embedColor = 0x5865F2;
+            if (currentLevel >= 50) embedColor = 0xFFD700;
+            else if (currentLevel >= 30) embedColor = 0x9B59B6;
+            else if (currentLevel >= 20) embedColor = 0x3498DB;
+            else if (currentLevel >= 10) embedColor = 0x2ECC71;
             
             const embed = new EmbedBuilder()
                 .setColor(embedColor)
@@ -108,9 +100,13 @@ ${progressBar} ${xpProgress}%
             
         } catch (error) {
             console.error("❌ Level komutu hatası:", error);
-            await interaction.editReply({ 
-                content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." 
-            }).catch(() => {});
+            try {
+                if (interaction.deferred) {
+                    await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
+                } else {
+                    await interaction.reply({ content: "❌ Bir hata oluştu!", ephemeral: true });
+                }
+            } catch (e) {}
         }
     }
 };

@@ -1,4 +1,3 @@
-// commands/seviye/level-ayarla.js
 import { SlashCommandBuilder, PermissionFlagsBits, ChannelType, EmbedBuilder } from "discord.js";
 import db from "../../utils/database.js";
 
@@ -19,6 +18,7 @@ export const data = {
                 });
             }
 
+            // "özel" seçeneği gelirse varsayılan mesaj ata
             if (mesaj === "özel") {
                 mesaj = "🎉 {user} Level {level}'a ulaştı!";
             }
@@ -30,7 +30,7 @@ export const data = {
                 });
             }
 
-            await db.set(`level_ayar_${guildId}`, {
+            db.set(`level_ayar_${guildId}`, {
                 kanalId: kanal.id,
                 mesaj: mesaj,
                 ayarlayan: interaction.user.id,
