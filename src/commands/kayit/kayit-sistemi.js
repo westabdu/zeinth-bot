@@ -1,9 +1,10 @@
+// commands/kayit/kayit-sistemi.js
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 import db from "../../utils/database.js";
 
 export const data = {
     name: "kayit-sistemi",
-    description: "📝 Butonlu kayıt sistemini kurar",
+    description: "📝 Butonlu kayıt sistemini yönetir",
     
     async execute(interaction) {
         try {
@@ -16,36 +17,34 @@ export const data = {
 
             const altKomut = interaction.options.getSubcommand();
 
-            if (altKomut === "kur") {
-                await kurKayitPaneli(interaction);
-            } else if (altKomut === "ayarla") {
+            if (altKomut === "ayarla") {
                 await ayarlaRoller(interaction);
+            } else if (altKomut === "kur") {
+                await kurKayitPaneli(interaction);
             } else if (altKomut === "sifirla") {
                 await sifirlaSistem(interaction);
             }
 
         } catch (error) {
             console.error("❌ Kayıt sistemi hatası:", error);
-            if (!interaction.replied) {
-                await interaction.reply({ 
-                    content: "❌ Bir hata oluştu!", 
-                    ephemeral: true 
-                }).catch(() => {});
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({ content: "❌ Bir hata oluştu!", ephemeral: true }).catch(() => {});
+            } else {
+                await interaction.editReply({ content: "❌ Bir hata oluştu!" }).catch(() => {});
             }
         }
     }
 };
 
+// 1. ROLLERİ AYARLA (Çalışıyor)
 async function ayarlaRoller(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: true }).catch(() => {});
 
     const kayitsizRol = interaction.options.getRole("kayitsiz_rol");
     const kayitliRol = interaction.options.getRole("kayitli_rol");
 
     if (!kayitsizRol || !kayitliRol) {
-        return interaction.editReply({ 
-            content: "❌ Lütfen geçerli roller seç!" 
-        });
+        return interaction.editReply({ content: "❌ Lütfen geçerli roller seç!" });
     }
 
     // Bot yetki kontrolü
@@ -81,8 +80,12 @@ async function ayarlaRoller(interaction) {
     await interaction.editReply({ embeds: [embed] });
 }
 
+// 2. KAYIT PANELİ KUR (Düzeltildi - Unknown interaction hatası çözüldü)
 async function kurKayitPaneli(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    // ÖNEMLİ: interaction zaten reply edilmemiş mi kontrol et
+    if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply({ ephemeral: true }).catch(() => {});
+    }
 
     const kanal = interaction.options.getChannel("kanal") || interaction.channel;
     const baslik = interaction.options.getString("baslik") || "📋 **Sunucuya Kayıt Ol**";
@@ -125,57 +128,77 @@ async function kurKayitPaneli(interaction) {
             .setStyle(ButtonStyle.Success)
     );
 
-    const panelMesaji = await kanal.send({ embeds: [embed], components: [row] });
+    try {
+        const panelMesaji = await kanal.send({ embeds: [embed], components: [row] });
 
-    await db.set(`kayit_panel_${guildId}_${panelMesaji.id}`, {
-        mesajId: panelMesaji.id,
-        kanalId: kanal.id,
-        kayitsizRolId: kayitsizRol.id,
-        kayitliRolId: kayitliRol.id,
-        olusturan: interaction.user.id,
-        olusturmaTarihi: Date.now()
-    });
+        await db.set(`kayit_panel_${guildId}_${panelMesaji.id}`, {
+            mesajId: panelMesaji.id,
+            kanalId: kanal.id,
+            kayitsizRolId: kayitsizRol.id,
+            kayitliRolId: kayitliRol.id,
+            olusturan: interaction.user.id,
+            olusturmaTarihi: Date.now()
+        });
 
-    await interaction.editReply({
-        content: `✅ **Kayıt paneli başarıyla kuruldu!**\n📌 Kanal: ${kanal}\n🆔 Mesaj ID: \`${panelMesaji.id}\``
-    });
+        await interaction.editReply({
+            content: `✅ **Kayıt paneli başarıyla kuruldu!**\n📌 Kanal: ${kanal}\n🆔 Mesaj ID: \`${panelMesaji.id}\``
+        });
+    } catch (error) {
+        console.error("❌ Panel kurma hatası:", error);
+        await interaction.editReply({ content: "❌ Panel kurulurken bir hata oluştu!" });
+    }
 }
 
+// 3. KAYIT SİSTEMİNİ SIFIRLA (YENİ)
 async function sifirlaSistem(interaction) {
-    await interaction.deferReply({ ephemeral: true });
-    
-    const guildId = interaction.guild.id;
-    
-    await db.delete(`kayit_roller_${guildId}`);
-    
-    // Tüm panelleri sil
-    const allKeys = await db.all();
-    allKeys.forEach(async item => {
-        if (item.id?.startsWith(`kayit_panel_${guildId}`)) {
-            await db.delete(item.id);
-        }
-    });
+    if (!interaction.deferred && !interaction.replied) {
+        await interaction.deferReply({ ephemeral: true }).catch(() => {});
+    }
 
-    await interaction.editReply({ 
-        content: "✅ **Kayıt sistemi tamamen sıfırlandı!** Tüm ayarlar ve paneller silindi." 
-    });
+    const guildId = interaction.guild.id;
+
+    try {
+        // Kayıt rollerini sil
+        await db.delete(`kayit_roller_${guildId}`);
+
+        // Kayıtlı kullanıcılar listesini sil
+        await db.delete(`kayitli_kullanicilar_${guildId}`);
+
+        // Tüm panelleri bul ve sil (alternatif: ayrı bir koleksiyon tutmak daha iyi ama şimdilik böyle)
+        // Not: Bu işlem çok panel varsa yavaş olabilir, ama genelde sorun olmaz.
+        const allKeys = await db.all(); // db.all() varsa
+        if (allKeys && Array.isArray(allKeys)) {
+            for (const item of allKeys) {
+                if (item.id && item.id.startsWith(`kayit_panel_${guildId}`)) {
+                    await db.delete(item.id);
+                }
+            }
+        }
+
+        await interaction.editReply({ 
+            content: "✅ **Kayıt sistemi tamamen sıfırlandı!** Tüm ayarlar ve paneller silindi." 
+        });
+    } catch (error) {
+        console.error("❌ Sıfırlama hatası:", error);
+        await interaction.editReply({ content: "❌ Sıfırlama sırasında hata oluştu!" });
+    }
 }
 
 export const slash_data = new SlashCommandBuilder()
     .setName("kayit-sistemi")
-    .setDescription("📝 Butonlu kayıt sistemini yönet")
+    .setDescription("📝 Butonlu kayıt sistemini yönetir")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+    .addSubcommand(sub =>
+        sub.setName("ayarla")
+            .setDescription("Kayıtsız ve kayıtlı rollerini belirle")
+            .addRoleOption(opt => opt.setName("kayitsiz_rol").setDescription("Yeni üyelere verilecek kayıtsız rolü").setRequired(true))
+            .addRoleOption(opt => opt.setName("kayitli_rol").setDescription("Kayıt olunca verilecek rol").setRequired(true)))
     .addSubcommand(sub =>
         sub.setName("kur")
             .setDescription("Kayıt panelini kur")
             .addChannelOption(opt => opt.setName("kanal").setDescription("Panelin gönderileceği kanal").setRequired(false))
             .addStringOption(opt => opt.setName("baslik").setDescription("Panel başlığı").setRequired(false))
             .addStringOption(opt => opt.setName("aciklama").setDescription("Panel açıklaması").setRequired(false)))
-    .addSubcommand(sub =>
-        sub.setName("ayarla")
-            .setDescription("Kayıtsız ve kayıtlı rollerini belirle")
-            .addRoleOption(opt => opt.setName("kayitsiz_rol").setDescription("Yeni üyelere verilecek kayıtsız rolü").setRequired(true))
-            .addRoleOption(opt => opt.setName("kayitli_rol").setDescription("Kayıt olunca verilecek rol").setRequired(true)))
     .addSubcommand(sub =>
         sub.setName("sifirla")
             .setDescription("Tüm kayıt sistemini sıfırla"));
