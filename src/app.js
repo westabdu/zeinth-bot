@@ -21,8 +21,7 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.GuildVoiceStates, // ⚡ BU ÇOK ÖNEMLİ!
+        GatewayIntentBits.GuildVoiceStates, // Tek sefer yeterli!
         GatewayIntentBits.GuildPresences
     ],
     presence: { 
@@ -41,13 +40,13 @@ const client = new Client({
 
 // DisTube kurulumu
 client.distube = new DisTube(client, {
-    emitNewSongOnly: true, // Sadece yeni şarkı başladığında event fırlat
-    leaveOnEmpty: true, // Kanal boşalınca çık
-    leaveOnFinish: true, // Sıra bitince çık
-    leaveOnStop: true, // Durdurulunca çık
+    emitNewSongOnly: true,
+    leaveOnEmpty: true,
+    leaveOnFinish: true,
+    leaveOnStop: true,
     plugins: [
-        new SpotifyPlugin(), // Spotify desteği için
-        new SoundCloudPlugin() // SoundCloud desteği için
+        new SpotifyPlugin(),
+        new SoundCloudPlugin()
     ]
 });
 
@@ -125,21 +124,32 @@ client.embed = (desc, tip = "ana") => {
     }
 };
 
-// --- Health Check Sunucusu ---
+// --- Health Check Sunucusu (GELİŞTİRİLMİŞ) ---
 const server = http.createServer((req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Zeinth Moderation Bot is running!\n');
+    // Health check endpoint'i
+    if (req.url === '/health' || req.url === '/') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ 
+            status: 'ok', 
+            bot: client.user?.tag || 'starting',
+            uptime: process.uptime()
+        }));
+    } else {
+        res.writeHead(404);
+        res.end('Not Found');
+    }
 });
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 3000; // Koyeb genelde 3000 bekler
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Health check sunucusu çalışıyor: ${PORT}`);
+    console.log(`✅ Health check sunucusu çalışıyor: http://0.0.0.0:${PORT}`);
 });
 
 // --- Ready Event ---
 client.once("ready", async () => {
     console.log(`🤖 ${client.user.tag} aktif!`);
     
+    // Komutları yükle
     await loadCommands();
     await loadEvents();
     
@@ -157,15 +167,18 @@ client.once("ready", async () => {
 });
 
 // --- Hata Yakalama ---
-process.on('unhandledRejection', error => {
-    console.error('❌ Yakalanmamış hata:', error);
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('❌ Yakalanmamış promise hatası:', reason);
 });
 
-process.on('uncaughtException', error => {
+process.on('uncaughtException', (error) => {
     console.error('❌ Yakalanmamış istisna:', error);
 });
 
-connectDB();
+// MongoDB bağlantısı
+connectDB().catch(err => {
+    console.error("❌ MongoDB bağlantı hatası:", err);
+});
 
 // --- Botu Başlat ---
 if (!process.env.DISCORD_TOKEN) {
@@ -173,4 +186,7 @@ if (!process.env.DISCORD_TOKEN) {
     process.exit(1);
 }
 
-client.login(process.env.DISCORD_TOKEN);
+client.login(process.env.DISCORD_TOKEN).catch(err => {
+    console.error("❌ Bot giriş hatası:", err);
+    process.exit(1);
+});
