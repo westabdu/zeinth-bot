@@ -7,6 +7,9 @@ export const data = {
     description: "Belirli seviyeye ulaşınca verilecek rolleri ayarla",
     async execute(interaction) {
         try {
+            // 🔁 HEMEN deferReply YAP!
+            await interaction.deferReply({ ephemeral: true });
+            
             const subcommand = interaction.options.getSubcommand();
             const guildId = interaction.guild.id;
             const key = `level_roles_${guildId}`;
@@ -17,7 +20,7 @@ export const data = {
                 const rol = interaction.options.getRole("rol");
                 
                 if (level < 1 || level > 1000) {
-                    return interaction.reply({ content: "❌ Seviye 1-1000 arası olmalı!", ephemeral: true });
+                    return interaction.editReply({ content: "❌ Seviye 1-1000 arası olmalı!" });
                 }
                 
                 levelRoles[level] = rol.id;
@@ -29,7 +32,7 @@ export const data = {
                     .setDescription(`**Seviye ${level}** -> ${rol}`)
                     .setTimestamp();
                 
-                await interaction.reply({ embeds: [embed] });
+                await interaction.editReply({ embeds: [embed] });
                 
             } else if (subcommand === "sil") {
                 const level = interaction.options.getInteger("seviye");
@@ -37,14 +40,14 @@ export const data = {
                 if (levelRoles[level]) {
                     delete levelRoles[level];
                     await db.set(key, levelRoles);
-                    await interaction.reply({ content: `✅ Seviye **${level}** için rol ayarı kaldırıldı.`, ephemeral: true });
+                    await interaction.editReply({ content: `✅ Seviye **${level}** için rol ayarı kaldırıldı.` });
                 } else {
-                    await interaction.reply({ content: `❌ Seviye **${level}** için ayarlanmış rol yok.`, ephemeral: true });
+                    await interaction.editReply({ content: `❌ Seviye **${level}** için ayarlanmış rol yok.` });
                 }
                 
             } else if (subcommand === "listele") {
                 if (Object.keys(levelRoles).length === 0) {
-                    return interaction.reply({ content: "📭 Henüz hiç seviye rolü ayarlanmamış.", ephemeral: true });
+                    return interaction.editReply({ content: "📭 Henüz hiç seviye rolü ayarlanmamış." });
                 }
                 
                 let desc = "";
@@ -61,11 +64,17 @@ export const data = {
                     .setDescription(desc)
                     .setTimestamp();
                 
-                await interaction.reply({ embeds: [embed] });
+                await interaction.editReply({ embeds: [embed] });
             }
         } catch (error) {
             console.error("❌ Level-rol komutu hatası:", error);
-            return interaction.reply({ content: "❌ Bir hata oluştu!", ephemeral: true });
+            
+            // Hata durumunda uygun şekilde cevap ver
+            if (interaction.deferred) {
+                await interaction.editReply({ content: "❌ Bir hata oluştu!" }).catch(() => {});
+            } else {
+                await interaction.reply({ content: "❌ Bir hata oluştu!", ephemeral: true }).catch(() => {});
+            }
         }
     }
 };
