@@ -6,7 +6,8 @@
   "main": "src/app.js",
   "scripts": {
     "start": "node src/app.js",
-    "build": "npm rebuild"
+    "build": "npm rebuild",
+    "postinstall": "npm rebuild"
   },
   "keywords": [],
   "author": "",
