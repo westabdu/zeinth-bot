@@ -1,4 +1,4 @@
-// commands/seviye/level-rol.js
+// commands/moderation/level-rol-ayarla.js
 import { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } from "discord.js";
 import db from "../../utils/database.js";
 
@@ -7,8 +7,8 @@ export const data = {
     description: "Belirli seviyeye ulaşınca verilecek rolleri ayarla",
     async execute(interaction) {
         try {
-            // 🔁 HEMEN deferReply YAP!
-            await interaction.deferReply({ ephemeral: true });
+            // ❌ BU SATIRI SİL! (interactionCreate zaten defer yapıyor)
+            // await interaction.deferReply({ ephemeral: true }); 
             
             const subcommand = interaction.options.getSubcommand();
             const guildId = interaction.guild.id;
@@ -69,7 +69,7 @@ export const data = {
         } catch (error) {
             console.error("❌ Level-rol komutu hatası:", error);
             
-            // Hata durumunda uygun şekilde cevap ver
+            // Hata durumunda
             if (interaction.deferred) {
                 await interaction.editReply({ content: "❌ Bir hata oluştu!" }).catch(() => {});
             } else {
@@ -83,15 +83,6 @@ export const slash_data = new SlashCommandBuilder()
     .setName("level-rol")
     .setDescription("Seviye rolleri yönetimi")
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-    .addSubcommand(sub => 
-        sub.setName("ekle")
-            .setDescription("Seviye rolü ekle")
-            .addIntegerOption(opt => opt.setName("seviye").setDescription("Kaçıncı seviyede verilecek?").setRequired(true).setMinValue(1).setMaxValue(1000))
-            .addRoleOption(opt => opt.setName("rol").setDescription("Verilecek rol").setRequired(true)))
-    .addSubcommand(sub => 
-        sub.setName("sil")
-            .setDescription("Seviye rolü kaldır")
-            .addIntegerOption(opt => opt.setName("seviye").setDescription("Hangi seviyedeki rol kaldırılacak?").setRequired(true)))
-    .addSubcommand(sub => 
-        sub.setName("listele")
-            .setDescription("Seviye rollerini listele"));
+    .addSubcommand(sub => sub.setName("ekle").setDescription("Seviye rolü ekle").addIntegerOption(opt => opt.setName("seviye").setDescription("Kaçıncı seviyede verilecek?").setRequired(true).setMinValue(1).setMaxValue(1000)).addRoleOption(opt => opt.setName("rol").setDescription("Verilecek rol").setRequired(true)))
+    .addSubcommand(sub => sub.setName("sil").setDescription("Seviye rolü kaldır").addIntegerOption(opt => opt.setName("seviye").setDescription("Hangi seviyedeki rol kaldırılacak?").setRequired(true)))
+    .addSubcommand(sub => sub.setName("listele").setDescription("Seviye rollerini listele"));
