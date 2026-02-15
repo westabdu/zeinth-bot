@@ -6,6 +6,7 @@ export const data = {
     description: "Seviyenizi ve sıranızı gösterir",
     
     async execute(interaction) {
+        await interaction.deferReply(); // ⬅️ EKLENDİ
         try {
             const targetUser = interaction.options.getUser("kullanıcı") || interaction.user;
             const guildId = interaction.guild.id;
@@ -39,7 +40,7 @@ export const data = {
                 return totalXpB - totalXpA;
             });
             
-            const rank = sortedUsers.findIndex(item => item.id === key) + 1
+            const rank = sortedUsers.findIndex(item => item.id === key) + 1;
             
             const currentLevel = levelData.msg_lv;
             const currentXP = levelData.msg_xp;
@@ -100,13 +101,7 @@ ${progressBar} ${xpProgress}%
             
         } catch (error) {
             console.error("❌ Level komutu hatası:", error);
-            try {
-                if (interaction.deferred) {
-                    await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
-                } else {
-                    await interaction.reply({ content: "❌ Bir hata oluştu!", ephemeral: true });
-                }
-            } catch (e) {}
+            await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
         }
     }
 };

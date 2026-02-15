@@ -6,6 +6,7 @@ export const data = {
     description: "Sunucudaki level sıralamasını gösterir.",
     
     async execute(interaction) {
+        await interaction.deferReply(); // ⬅️ EKLENDİ
         try {
             const guildId = interaction.guild.id;
             const page = interaction.options.getInteger('sayfa') || 1;
@@ -77,13 +78,7 @@ export const data = {
             
         } catch (error) {
             console.error("❌ Level-top komutu hatası:", error);
-            try {
-                if (interaction.deferred) {
-                    await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
-                } else {
-                    await interaction.reply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene.", ephemeral: true });
-                }
-            } catch (e) {}
+            await interaction.editReply({ content: "❌ Bir hata oluştu! Lütfen daha sonra tekrar dene." });
         }
     }
 };
