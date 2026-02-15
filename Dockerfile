@@ -1,35 +1,17 @@
-FROM node:20-bullseye-slim
+FROM node:20-slim
 
-# Gerekli sistem paketlerini yükle
-RUN apt-get update && apt-get install -y \
-    python3 \
-    make \
-    g++ \
-    build-essential \
-    ffmpeg \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Python linki oluştur
-RUN ln -s /usr/bin/python3 /usr/bin/python
+# Sadece ffmpeg yükle
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Package.json'ı kopyala
 COPY package.json ./
 
-# Önce husky'yi global kur, sonra diğer paketleri kur
-RUN npm install -g husky || true
-RUN npm install --no-audit --no-fund --force || true
-RUN npm install --no-audit --no-fund --force
+# Script'leri devre dışı bırak ve paketleri kur
+RUN npm config set ignore-scripts true
+RUN npm install --no-audit --no-fund
 
-# Geri kalan dosyaları kopyala
 COPY . .
-
-# Husky'yi devre dışı bırak
-RUN npm pkg delete scripts.prepare || true
-RUN npm pkg delete scripts.prepare-commit-msg || true
-RUN npm pkg delete scripts.precommit || true
 
 ENV DISCORD_TOKEN=
 ENV REPLICATE_API_KEY=
