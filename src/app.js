@@ -10,7 +10,7 @@ import { SoundCloudPlugin } from "@distube/soundcloud";
 
 //event handler'lar
 import connectDB from './database/mongoose.js';
-import muzikHandler from "./events/muzikHandler.js";
+import muzikHandler from "./events/muzikHandler.js"; // ⬅️ BU EKSİKTİ!
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -21,7 +21,7 @@ const client = new Client({
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessageReactions,
-        GatewayIntentBits.GuildVoiceStates, // Tek sefer yeterli!
+        GatewayIntentBits.GuildVoiceStates,
         GatewayIntentBits.GuildPresences
     ],
     presence: { 
@@ -124,9 +124,8 @@ client.embed = (desc, tip = "ana") => {
     }
 };
 
-// --- Health Check Sunucusu (GELİŞTİRİLMİŞ) ---
+// --- Health Check Sunucusu ---
 const server = http.createServer((req, res) => {
-    // Health check endpoint'i
     if (req.url === '/health' || req.url === '/') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
@@ -140,7 +139,7 @@ const server = http.createServer((req, res) => {
     }
 });
 
-const PORT = process.env.PORT || 3000; // Koyeb genelde 3000 bekler
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Health check sunucusu çalışıyor: http://0.0.0.0:${PORT}`);
 });
@@ -149,7 +148,6 @@ server.listen(PORT, '0.0.0.0', () => {
 client.once("ready", async () => {
     console.log(`🤖 ${client.user.tag} aktif!`);
     
-    // Komutları yükle
     await loadCommands();
     await loadEvents();
     
@@ -175,12 +173,10 @@ process.on('uncaughtException', (error) => {
     console.error('❌ Yakalanmamış istisna:', error);
 });
 
-// MongoDB bağlantısı
 connectDB().catch(err => {
     console.error("❌ MongoDB bağlantı hatası:", err);
 });
 
-// --- Botu Başlat ---
 if (!process.env.DISCORD_TOKEN) {
     console.error("❌ DISCORD_TOKEN environment variable bulunamadı!");
     process.exit(1);
