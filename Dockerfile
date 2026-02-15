@@ -1,4 +1,4 @@
-FROM node:18-bullseye-slim
+FROM node:20-bullseye-slim
 
 # Python ve derleme araçlarını yükle (opus için gerekli)
 RUN apt-get update && apt-get install -y \
@@ -22,14 +22,14 @@ WORKDIR /app
 # Önce sadece package.json'u kopyala
 COPY package.json ./
 
-# npm'yi güncelle ve bağımlılıkları build-from-source ile kur
-RUN npm install -g npm@latest
+# npm'yi güncelle (uyumlu versiyon) ve bağımlılıkları kur
+RUN npm install -g npm@10.8.2
 RUN npm install --build-from-source
 
 # Geri kalan dosyaları kopyala
 COPY . .
 
-# Opus paketini yeniden derle (opsiyonel)
+# Opus paketini yeniden derle
 RUN npm rebuild @discordjs/opus --build-from-source
 
 # Ortam değişkenlerini ayarla
