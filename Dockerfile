@@ -1,17 +1,42 @@
-FROM node:18-slim
+FROM node:18-bullseye-slim
+
+# Python ve derleme araçlarını yükle (opus için gerekli)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    make \
+    g++ \
+    build-essential \
+    pkg-config \
+    libtool \
+    automake \
+    autoconf \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python linki oluştur (node-gyp için)
+RUN ln -s /usr/bin/python3 /usr/bin/python
 
 WORKDIR /app
 
-# Sadece package.json'u kopyala
+# Önce sadece package.json'u kopyala
 COPY package.json ./
 
-# npm install --production ile kur
-RUN npm install --production --no-package-lock
+# npm'yi güncelle ve bağımlılıkları build-from-source ile kur
+RUN npm install -g npm@latest
+RUN npm install --build-from-source
 
 # Geri kalan dosyaları kopyala
 COPY . .
 
+# Opus paketini yeniden derle (opsiyonel)
+RUN npm rebuild @discordjs/opus --build-from-source
+
+# Ortam değişkenlerini ayarla
 ENV DISCORD_TOKEN=
 ENV REPLICATE_API_KEY=
+ENV FFMPEG_PATH=/usr/bin/ffmpeg
+ENV NODE_ENV=production
 
+# Çalıştırma komutu
 CMD ["node", "src/app.js"]
