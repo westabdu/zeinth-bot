@@ -4,7 +4,13 @@ import 'dotenv/config';
 import path from 'path';
 import http from 'http';
 import { fileURLToPath } from 'url';
+import { DisTube } from "distube";
+import { SpotifyPlugin } from "@distube/spotify";
+import { SoundCloudPlugin } from "@distube/soundcloud";
+
+//event handler'lar
 import connectDB from './database/mongoose.js';
+import muzikHandler from "./events/muzikHandler.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -16,6 +22,7 @@ const client = new Client({
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessageReactions,
         GatewayIntentBits.GuildVoiceStates,
+        GatewayIntentBits.GuildVoiceStates, // ⚡ BU ÇOK ÖNEMLİ!
         GatewayIntentBits.GuildPresences
     ],
     presence: { 
@@ -31,6 +38,21 @@ const client = new Client({
         Partials.ThreadMember
     ]
 });
+
+// DisTube kurulumu
+client.distube = new DisTube(client, {
+    emitNewSongOnly: true, // Sadece yeni şarkı başladığında event fırlat
+    leaveOnEmpty: true, // Kanal boşalınca çık
+    leaveOnFinish: true, // Sıra bitince çık
+    leaveOnStop: true, // Durdurulunca çık
+    plugins: [
+        new SpotifyPlugin(), // Spotify desteği için
+        new SoundCloudPlugin() // SoundCloud desteği için
+    ]
+});
+
+// Müzik handler'ını başlat
+muzikHandler(client);
 
 // --- Komut Yükleyici ---
 client.commands = new Collection();
